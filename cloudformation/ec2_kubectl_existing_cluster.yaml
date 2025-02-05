@@ -1,0 +1,279 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation Template"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Bastion EC2
+        Parameters:
+          - Vpc
+          - Subnet
+          - AmiId
+          - InstanceType
+      - Label:
+          default: Existing EKS Cluster
+        Parameters:
+          - EksCluster
+
+Parameters:
+  Vpc:
+    Description: VPC
+    Type: AWS::EC2::VPC::Id
+    AllowedPattern: ".+"
+    ConstraintDescription: "Parameter [Vpc] must not be empty"
+  Subnet:
+    Description: Subnet
+    Type: AWS::EC2::Subnet::Id
+    AllowedPattern: ".+"
+    ConstraintDescription: "Parameter [Subnet] must not be empty"
+  AmiId:
+    Description: EC2 AMI Id
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id> # aws ssm get-parameters-by-path --path /aws/service/ami-amazon-linux-latest --query 'Parameters[].Name'
+    Default: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64"
+    AllowedValues:
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-arm64"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-6.1-arm64"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-6.1-x86_64"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-arm64"
+      - "/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2"
+      - "/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-s3"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-ebs"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-ebs"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+      - "/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64"
+      - "/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-ebs"
+      - "/aws/service/ami-amazon-linux-latest/amzn-ami-minimal-hvm-x86_64-ebs"
+      - "/aws/service/ami-amazon-linux-latest/amzn-ami-minimal-hvm-x86_64-s3"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-arm64-gp2"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-minimal-hvm-arm64-ebs"
+      - "/aws/service/ami-amazon-linux-latest/amzn2-ami-minimal-hvm-x86_64-ebs"
+    AllowedPattern: ".+"
+    ConstraintDescription: "Parameter [AmiId] must not be empty"
+  InstanceType:
+    Description: EC2 Instance Type
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t1.micro
+      - t2.2xlarge
+      - t2.large
+      - t2.medium
+      - t2.micro
+      - t2.nano
+      - t2.small
+      - t2.xlarge
+      - t3.2xlarge
+      - t3.large
+      - t3.medium
+      - t3.micro
+      - t3.nano
+      - t3.small
+      - t3.xlarge
+      - t3a.2xlarge
+      - t3a.large
+      - t3a.medium
+      - t3a.micro
+      - t3a.nano
+      - t3a.small
+      - t3a.xlarge
+      - t4g.2xlarge
+      - t4g.large
+      - t4g.medium
+      - t4g.micro
+      - t4g.nano
+      - t4g.small
+      - t4g.xlarge
+    AllowedPattern: ".+"
+    ConstraintDescription: "Parameter [InstanceType] must not be empty"
+  EksCluster:
+    Description: Eks Cluster Name
+    Type: String
+    AllowedPattern: ".+"
+    ConstraintDescription: "Parameter [EksCluster] must not be empty"
+
+Resources:
+  KeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: !Sub
+        - "key-${Id}"
+        - Id: !Select [3, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]]
+
+  BastionEc2:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: '1'                
+        Timeout: PT10M
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPair
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: True
+          DeviceIndex: 0
+          SubnetId: !Ref Subnet
+          GroupSet: 
+            - !Ref BastionEc2SecurityGroup
+      Tags: 
+        - Key: Name
+          Value: bastion
+      IamInstanceProfile: !Ref BastionEc2InstanceProfile
+      UserData: 
+        # sudo tail -f /var/log/cloud-init-output.log
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+            dnf update -y
+            dnf install -y git
+            dnf groupinstall -y "Development Tools"
+            dnf install -y python3.12
+            python3.12 -m ensurepip --upgrade
+            python3.12 -m pip install --upgrade pip
+            ln -s /usr/bin/pip3.12 /usr/local/bin/pip
+            ln -s /usr/bin/python3.12 /usr/bin/python
+            wget https://github.com/coder/code-server/releases/download/v4.93.1/code-server-4.93.1-linux-amd64.tar.gz
+            tar -xzf code-server-4.93.1-linux-amd64.tar.gz
+            mv code-server-4.93.1-linux-amd64 /usr/local/lib/code-server
+            ln -s /usr/local/lib/code-server/bin/code-server /usr/local/bin/code-server
+            mkdir -p /home/ec2-user/.config/code-server
+            cat <<EOF > /home/ec2-user/.config/code-server/config.yaml
+            bind-addr: 0.0.0.0:8000
+            auth: none
+            cert: false
+            EOF
+            chown -R ec2-user:ec2-user /home/ec2-user/.config
+            cat <<EOF > /etc/systemd/system/code-server.service
+            [Unit]
+            Description=VS Code Server
+            After=network.target
+            [Service]
+            Type=simple
+            User=ec2-user
+            ExecStart=/usr/local/bin/code-server --config /home/ec2-user/.config/code-server/config.yaml /home/ec2-user
+            Restart=always
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            systemctl daemon-reload
+            systemctl enable code-server
+            systemctl start code-server
+
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource BastionEc2 --region ${AWS::Region}
+
+            su - ec2-user <<'EOF'
+            echo "aws_region='${AWS::Region}'" >>/home/ec2-user/.bashrc
+            echo "cluster_name='${EksCluster}'" >>/home/ec2-user/.bashrc
+            source /home/ec2-user/.bashrc
+
+            git clone https://github.com/iamhansko/eks-quickstart.git
+            mv eks-quickstart /home/ec2-user/scripts
+            chmod +x /home/ec2-user/scripts/*
+
+            mkdir -p /home/ec2-user/bin
+            curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.0/2024-05-12/bin/linux/amd64/kubectl
+            chmod +x kubectl
+            mv kubectl /home/ec2-user/bin/kubectl
+            export PATH=/home/ec2-user/bin:$PATH
+            echo "export PATH=/home/ec2-user/bin:$PATH" >> ~/.bashrc
+            echo "alias k=kubectl" >>~/.bashrc
+            echo "complete -o default -F __start_kubectl k" >>~/.bashrc
+            echo "source <(kubectl completion bash)" >>~/.bashrc
+            aws eks update-kubeconfig --region ${AWS::Region} --name ${EksCluster}
+            curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            sudo mv /tmp/eksctl /usr/local/bin
+            aws configure set region ${AWS::Region}
+            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > /home/ec2-user/get_helm.sh
+            chmod 700 /home/ec2-user/get_helm.sh
+            /home/ec2-user/get_helm.sh
+
+            vpc_id="${Vpc}"
+            public_subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" "Name=tag:Name,Values=*public*" --query 'Subnets[*].SubnetId' --output text)
+            private_subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" "Name=tag:Name,Values=*private*" --query 'Subnets[*].SubnetId' --output text)
+            echo $public_subnets | xargs -n1 aws ec2 modify-subnet-attribute --map-public-ip-on-launch --subnet-id
+            aws ec2 create-tags --resources $public_subnets --tags Key=kubernetes.io/role/elb,Value=1
+            aws ec2 create-tags --resources $private_subnets --tags Key=kubernetes.io/role/internal-elb,Value=1
+            bastion_id=$(ec2-metadata -i | cut -d " " -f 2)
+            cluster_sg=$(aws eks describe-cluster --name ${EksCluster} --query 'cluster.resourcesVpcConfig.clusterSecurityGroupId' --output text)
+            bastion_sg=$(aws ec2 describe-instances --instance-ids $bastion_id --query 'Reservations[].Instances[].SecurityGroups[].GroupId' --output text)
+            aws ec2 modify-instance-attribute --instance-id $bastion_id --groups $bastion_sg $cluster_sg
+            EOF
+  BastionEc2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security Group for Bastion EC2 SSH Connection"
+      GroupName: bastion-sg
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: bastion-sg
+  BastionEc2IamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+  BastionEc2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: 
+        - !Ref BastionEc2IamRole
+
+  EksClusterAccessEntry:
+    # To manage your EKS Cluster using 'kubectl' commands inside a Bastion EC2 
+    Type: AWS::EKS::AccessEntry
+    Properties:
+      AccessPolicies: 
+        - AccessScope: 
+            Type: cluster
+          PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+      ClusterName: !Ref EksCluster
+      PrincipalArn: !GetAtt BastionEc2IamRole.Arn
+      Type: STANDARD
+  # KubeProxyAddon:
+  #   Type: AWS::EKS::Addon
+  #   Properties:
+  #     AddonName: kube-proxy # eksctl utils describe-addon-versions --kubernetes-version 1.31 | grep AddonName
+  #     ClusterName: !Ref EksCluster
+  # CoreDNSAddon:
+  #   Type: AWS::EKS::Addon
+  #   Properties:
+  #     AddonName: coredns # eksctl utils describe-addon-versions --kubernetes-version 1.31 | grep AddonName
+  #     ClusterName: !Ref EksCluster
+  # VpcCniAddon:
+  #   Type: AWS::EKS::Addon
+  #   Properties:
+  #     AddonName: vpc-cni # eksctl utils describe-addon-versions --kubernetes-version 1.31 | grep AddonName
+  #     ClusterName: !Ref EksCluster
+  EksNodeIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
