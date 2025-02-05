@@ -1,0 +1,28 @@
+# eksctl create cluster -f cluster.yaml
+# eksctl update cluster --approved -f cluster.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: basic
+  region: us-east-1
+  version: "1.31"
+
+vpc:
+  nat:
+    gateway: HighlyAvailable # HighlyAvailable, Single, Disable
+
+managedNodeGroups:
+  - name: al2023nodegroup
+    amiFamily: AmazonLinux2023 #or AmazonLinux2
+    instanceType: t3.xlarge
+    desiredCapacity: 3
+    privateNetworking: true
+    disableIMDSv1: true
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy

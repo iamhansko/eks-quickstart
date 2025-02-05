@@ -173,8 +173,8 @@ Resources:
             source /home/ec2-user/.bashrc
 
             git clone https://github.com/iamhansko/eks-quickstart.git
-            mv eks-quickstart /home/ec2-user/scripts
-            chmod +x /home/ec2-user/scripts/*
+            mv eks-quickstart /home/ec2-user/quickstart
+            chmod +x /home/ec2-user/quickstart/*
 
             mkdir -p /home/ec2-user/bin
             curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.0/2024-05-12/bin/linux/amd64/kubectl
