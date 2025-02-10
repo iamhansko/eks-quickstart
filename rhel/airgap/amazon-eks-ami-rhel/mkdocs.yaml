@@ -1,0 +1,27 @@
+site_name: Amazon EKS RHEL AMI
+docs_dir: doc/
+site_description: Build template and runtime resources for the Amazon EKS RHEL AMI
+repo_name: aws-samples/amazon-eks-ami-rhel
+repo_url: https://github.com/aws-samples/amazon-eks-ami-rhel
+nav:
+  - 'Overview': README.md
+  - 'Community':
+    - 'Contribution guidelines': CONTRIBUTING.md
+    - 'Code of Conduct': CODE_OF_CONDUCT.md
+  - 'Development': development.md
+  - 'Usage':
+    - 'Overview': usage/overview.md
+    - 'Red Hat Enterprise Linux': usage/rhel.md
+  - 'nodeadm':
+    - 'Overview': nodeadm/README.md
+    - 'API':
+      - 'Concepts': nodeadm/doc/api-concepts.md
+      - 'Reference': nodeadm/doc/api.md
+    - 'Examples': nodeadm/doc/examples.md
+  - 'Node Group Creation': nodegroups.md
+theme:
+  name: material
+  palette:
+    primary: black
+  features:
+    - navigation.sections
