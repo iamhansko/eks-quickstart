@@ -61,7 +61,7 @@ export PAUSE_CONTAINER_IMAGE="602401143452.dkr.ecr.ap-northeast-2.amazonaws.com/
 
 sudo systemctl restart NetworkManager
 
-export AMI_NAME="amazon-eks-ami-rhel"
+export AMI_NAME="amazon-eks-ami-rhel-airgap"
 TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
 export INSTANCE_ID=`curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id`
 aws ec2 create-image --instance-id $INSTANCE_ID --name $AMI_NAME

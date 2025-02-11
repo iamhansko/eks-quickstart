@@ -169,7 +169,7 @@ else
     # CONTAINERD_DOWNLOAD_URL=$(curl -s "$CONTAINERD_URL" | jq -r '.assets[] | select(.browser_download_url | endswith("/containerd-'$CONTAINERD_VERSION'-linux-'$ARCH'.tar.gz")) | .browser_download_url')
     # sudo wget $CONTAINERD_DOWNLOAD_URL
   fi
-  sudo tar Cxzvvf /usr containerd*.tar.gz
+  # sudo tar Cxzvvf /usr containerd*.tar.gz
 fi
 
 sudo systemctl daemon-reload
@@ -211,7 +211,7 @@ else
     # NERDCTL_DOWNLOAD_URL=$(curl -s "$NERDCTL_URL" | jq -r '.assets[] | select(.browser_download_url | endswith("/nerdctl-'$NERDCTL_VERSION'-linux-'$ARCH'.tar.gz")) | .browser_download_url')
     # sudo wget $NERDCTL_DOWNLOAD_URL
   fi
-  sudo tar Cxzvvf /usr/bin nerdctl*.tar.gz
+  # sudo tar Cxzvvf /usr/bin nerdctl*.tar.gz
 fi
 
 # TODO: are these necessary? What do they do?
