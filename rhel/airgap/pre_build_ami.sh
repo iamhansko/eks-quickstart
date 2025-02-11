@@ -26,5 +26,5 @@ KUBERNETES_BUILD_DATE="2025-01-10"
 ARCH="amd64"
 S3_PATH="s3://$BINARY_BUCKET_NAME/$KUBERNETES_VERSION/$KUBERNETES_BUILD_DATE/bin/linux/$ARCH"
 aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/kubelet .
-aws s3 cp --region $BINARY_BUCKET_REGION S3_PATH/kubelet.sha256 .
+aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/kubelet.sha256 .
 aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/ecr-credential-provider .
