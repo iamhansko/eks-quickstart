@@ -158,7 +158,7 @@ else
   # Download containerd tarball from S3 if an S3 URI is specified in the CONTAINERD_URL environment variable
   if [[ "$CONTAINERD_URL" == s3://* ]]; then
     echo "Downloading containerd from: $CONTAINERD_URL"
-    aws s3 cp $CONTAINERD_URL .
+    # aws s3 cp $CONTAINERD_URL .
   else
     if [ "$CONTAINERD_VERSION" == "*" ]; then
       CONTAINERD_URL=$CONTAINERD_URL"/latest"
@@ -200,7 +200,7 @@ else
   # Download nerdctl tarball from S3 if an S3 URI is specified in the NERDCTL_URL environment variable
   if [[ "$NERDCTL_URL" == s3://* ]]; then
     echo "Downloading nerdctl from: $NERDCTL_URL"
-    aws s3 cp $NERDCTL_URL .
+    # aws s3 cp $NERDCTL_URL .
   else
     if [ "$NERDCTL_VERSION" == "*" ]; then
       NERDCTL_URL=$NERDCTL_URL"/latest"
@@ -249,11 +249,11 @@ for binary in ${BINARIES[*]}; do
   if [ "${AWS_CREDS_OK}" = "true" ]; then
     echo "AWS credentials present - using them to copy binaries from s3."
     if [[ "$BINARY_BUCKET_NAME" == "amazon-eks" ]] && [[ "$AWS_REGION" =~ (us-gov-east-1|us-gov-west-1) ]]; then
-      aws s3 cp --region us-west-2 --no-sign-request $S3_PATH/$binary .
-      aws s3 cp --region us-west-2 --no-sign-request $S3_PATH/$binary.sha256 .
+      # aws s3 cp --region us-west-2 --no-sign-request $S3_PATH/$binary .
+      # aws s3 cp --region us-west-2 --no-sign-request $S3_PATH/$binary.sha256 .
     else
-      aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/$binary .
-      aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/$binary.sha256 .
+      # aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/$binary .
+      # aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/$binary.sha256 .
     fi
   else
     echo "AWS credentials missing - using wget to fetch binaries from s3. Note: This won't work for private bucket."
@@ -282,9 +282,9 @@ ECR_CREDENTIAL_PROVIDER_BINARY="ecr-credential-provider"
 if [ "${AWS_CREDS_OK}" = "true" ]; then
   echo "AWS credentials present - using them to copy ${ECR_CREDENTIAL_PROVIDER_BINARY} from s3."
   if [[ "$BINARY_BUCKET_NAME" == "amazon-eks" ]] && [[ "$AWS_REGION" =~ (us-gov-east-1|us-gov-west-1) ]]; then
-    aws s3 cp --region us-west-2 --no-sign-request $S3_PATH/$ECR_CREDENTIAL_PROVIDER_BINARY .
+    # aws s3 cp --region us-west-2 --no-sign-request $S3_PATH/$ECR_CREDENTIAL_PROVIDER_BINARY .
   else
-    aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/$ECR_CREDENTIAL_PROVIDER_BINARY .      
+    # aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/$ECR_CREDENTIAL_PROVIDER_BINARY .      
   fi
 else
   echo "AWS credentials missing - using wget to fetch ${ECR_CREDENTIAL_PROVIDER_BINARY} from s3. Note: This won't work for private bucket."

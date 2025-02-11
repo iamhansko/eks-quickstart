@@ -1,6 +1,4 @@
 #!/bin/bash
-# sudo dnf install -y git
-# git clone https://github.com/aws-samples/amazon-eks-ami-rhel.git
 sudo cp -rv ./amazon-eks-ami-rhel/templates/rhel/runtime/rootfs/* /
 sudo chmod -R a+x ./amazon-eks-ami-rhel/templates/shared/runtime/bin/
 sudo cp -rv ./amazon-eks-ami-rhel/templates/shared/runtime/bin/* /usr/bin/
@@ -20,3 +18,13 @@ sudo ln -sv /usr/local/bin/aws /usr/bin/aws
 sudo aws ecr get-login-password --region ap-northeast-2 | sudo nerdctl login --username AWS --password-stdin 602401143452.dkr.ecr.ap-northeast-2.amazonaws.com
 sudo nerdctl pull public.ecr.aws/eks-distro-build-tooling/golang:1.23
 sudo nerdctl pull 602401143452.dkr.ecr.ap-northeast-2.amazonaws.com/eks/pause:3.10
+
+BINARY_BUCKET_REGION="ap-northeast-2"
+BINARY_BUCKET_NAME="amazon-eks"
+KUBERNETES_VERSION="1.31.4"
+KUBERNETES_BUILD_DATE="2025-01-10"
+ARCH="amd64"
+S3_PATH="s3://$BINARY_BUCKET_NAME/$KUBERNETES_VERSION/$KUBERNETES_BUILD_DATE/bin/linux/$ARCH"
+aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/kubelet .
+aws s3 cp --region $BINARY_BUCKET_REGION S3_PATH/kubelet.sha256 .
+aws s3 cp --region $BINARY_BUCKET_REGION $S3_PATH/ecr-credential-provider .
