@@ -193,7 +193,7 @@ EOF
 # source ~/.bashrc
 
 rm -rf /home/ec2-user/lambda/build
-mkdir /home/ec2-user/lambda/build
+mkdir -p /home/ec2-user/lambda/build
 cd /home/ec2-user/lambda/build
 cp -r ../src/* .
 pip install --platform=manylinux2014_x86_64 --only-binary=:all: -t . -r requirements.txt

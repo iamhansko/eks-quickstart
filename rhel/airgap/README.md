@@ -1,5 +1,23 @@
 # RHEL EKS Optimized AMI Builder (Airgap)
 
+### EKS Setting
+#### Node Security Group
+- Add "`eks-cluster-sg-CLUSTER_NAME`"
+#### Node IAM Role
+- **`AmazonEC2ContainerRegistryReadOnly`**
+- **`AmazonEKS_CNI_Policy`**
+- **`AmazonEKSWorkerNodePolicy`**
+- `AmazonSSMManagedInstanceCore` (Optional)
+- `AmazonEBSCSIDriverPolicy` (Optional)
+- `AmazonEFSCSIDriverPolicy` (Optional)
+- `CloudWatchAgentServerPolicy` (Optional)
+#### Node IAM Access Entry
+- IAM principal : Node IAM Role
+- Type : EC2 Linux
+---
+
+### How To
+
 ```bash
 # Run a new EC2 Instance (RHEL based)
 # Example : RHEL-8.10.0_HVM-20241031-x86_64-1584-Hourly2-GP3(ami-0294d1c0c9cd9d77c)
