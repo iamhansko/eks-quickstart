@@ -30,20 +30,20 @@ mkdir -p /tmp/efa-installer
 cd /tmp/efa-installer
 
 #https://github.com/amazonlinux/amazon-linux-2023/issues/243
-# sudo dnf swap -y gnupg2-minimal gnupg2-full
+sudo dnf swap -y gnupg2-minimal gnupg2-full
 
 ##########################################################################################
 ### Download installer ###################################################################
 ##########################################################################################
-# if [ ${PARTITION} == "aws-iso-f" ] || [ ${PARTITION} == "aws-iso-e" ]; then
-#   aws s3 cp --region ${BINARY_BUCKET_REGION} s3://${BINARY_BUCKET_NAME}/rpms/${EFA_PACKAGE} .
-#   aws s3 cp --region ${BINARY_BUCKET_REGION} s3://${BINARY_BUCKET_NAME}/rpms/aws-efa-installer.key . && gpg --import aws-efa-installer.key
-#   aws s3 cp --region ${BINARY_BUCKET_REGION} s3://${BINARY_BUCKET_NAME}/rpms/${EFA_PACKAGE}.sig .
-# else
-#   curl -O ${EFA_DOMAIN}/${EFA_PACKAGE}
-#   curl -O ${EFA_DOMAIN}/aws-efa-installer.key && gpg --import aws-efa-installer.key
-#   curl -O ${EFA_DOMAIN}/${EFA_PACKAGE}.sig
-# fi
+if [ ${PARTITION} == "aws-iso-f" ] || [ ${PARTITION} == "aws-iso-e" ]; then
+  aws s3 cp --region ${BINARY_BUCKET_REGION} s3://${BINARY_BUCKET_NAME}/rpms/${EFA_PACKAGE} .
+  aws s3 cp --region ${BINARY_BUCKET_REGION} s3://${BINARY_BUCKET_NAME}/rpms/aws-efa-installer.key . && gpg --import aws-efa-installer.key
+  aws s3 cp --region ${BINARY_BUCKET_REGION} s3://${BINARY_BUCKET_NAME}/rpms/${EFA_PACKAGE}.sig .
+else
+  curl -O ${EFA_DOMAIN}/${EFA_PACKAGE}
+  curl -O ${EFA_DOMAIN}/aws-efa-installer.key && gpg --import aws-efa-installer.key
+  curl -O ${EFA_DOMAIN}/${EFA_PACKAGE}.sig
+fi
 
 if ! gpg --verify ./aws-efa-installer-${EFA_VERSION}.tar.gz.sig &> /dev/null; then
   echo "EFA Installer signature failed verification!"
@@ -58,4 +58,4 @@ sudo ./efa_installer.sh --minimal -y
 
 cd -
 sudo rm -rf /tmp/efa-installer
-# sudo dnf swap -y gnupg2-full gnupg2-minimal
+sudo dnf swap -y gnupg2-full gnupg2-minimal
