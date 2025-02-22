@@ -5,6 +5,11 @@ if [ $(id -u) -ne 0 ]; then
     exit
 fi
 
+# set journal log (/run/log/journal -> /var/log/journal)
+sudo mkdir -p /var/log/journal
+sudo systemd-tmpfiles --create --prefix /var/log/journal
+sudo systemctl restart systemd-journald
+
 sudo chmod -R +x ./amazon-eks-ami-rhel/*
 cd amazon-eks-ami-rhel
 
@@ -15,6 +20,8 @@ sudo cp -rv ./templates/rhel/runtime/rootfs/* /
 
 sudo chmod -R a+x ./templates/shared/runtime/bin/
 sudo cp -rv ./templates/shared/runtime/bin/* /usr/bin/
+
+./templates/shared/provisioners/set-clocksource.sh
 
 export ENABLE_FIPS=false
 ./templates/rhel/provisioners/enable-fips.sh
