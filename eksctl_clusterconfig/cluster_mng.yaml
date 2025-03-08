@@ -1,0 +1,49 @@
+# eksctl create cluster -f ./clusterconfig.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: # New Cluster Name
+  region: # AWS Region
+  version: "1.31" # Kubernetes Version
+vpc:
+  id: # Existing Vpc ID
+  subnets:
+    public:
+      public1:
+        id: # Existing Public Subnet 1 ID
+      public2:
+        id: # Existing Public Subnet 2 ID
+      public3:
+        id: # Existing Public Subnet 3 ID
+    private:
+      private1:
+        id: # Existing Private Subnet 1 ID
+      private2:
+        id: # Existing Private Subnet 2 ID
+      private3:
+        id: # Existing Private Subnet 3 ID
+managedNodeGroups:
+  - name: nodegroup
+    amiFamily: AmazonLinux2023
+    instanceType: t3.xlarge
+    desiredCapacity: 3
+    privateNetworking: true
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+addons:
+  - name: coredns
+    resolveConflicts: overwrite
+  - name: kube-proxy
+    resolveConflicts: overwrite
+  - name: vpc-cni
+    resolveConflicts: overwrite
+  - name: eks-pod-identity-agent
+    resolveConflicts: overwrite
+  - name: metrics-server
+    resolveConflicts: overwrite
+iam:
+  withOIDC: true # eksctl utils associate-iam-oidc-provider --cluster $CLUSTER_NAME --approve
