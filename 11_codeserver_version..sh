@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o xtrace
 
 export HOME=/home/ec2-user
 
@@ -9,7 +10,7 @@ dnf install -y python3.12
 python3.12 -m ensurepip --upgrade
 python3.12 -m pip install --upgrade pip
 ln -sf /usr/local/bin/pip3.12 /usr/bin/pip
-ln -sf /usr//bin/python3.12 /usr/bin/python
+ln -sf /usr/bin/python3.12 /usr/bin/python
 
 export CODE_SERVER_VERSION="4.96.4"
 wget https://github.com/coder/code-server/releases/download/v$CODE_SERVER_VERSION/code-server-$CODE_SERVER_VERSION-linux-amd64.tar.gz
